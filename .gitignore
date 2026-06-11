@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[cod]
+.env
+src/db/farmtech.db
+.venv/
+venv/
+.DS_Store
+.idea/
+.vscode/
