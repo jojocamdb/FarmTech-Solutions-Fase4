@@ -138,8 +138,8 @@ def inserir_leitura_simulada(
         conn.commit()
 
 
-def mediana_cultura(cultura: str) -> dict | None:
-    """Retorna a mediana de N, P, K e ph para uma cultura."""
+def media_cultura(cultura: str) -> dict | None:
+    """Retorna a media de N, P, K e ph para uma cultura."""
     sql = """
         SELECT
             AVG(aa.n) as n_med,

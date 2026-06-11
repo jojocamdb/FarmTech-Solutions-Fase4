@@ -14,7 +14,7 @@ O banco SQLite (`farmtech.db`) é composto por cinco tabelas normalizadas:
 
 - **culturas** — catálogo de 22 culturas do dataset agronômico.
 - **sensores** — cadastro de sensores IoT; permite registrar múltiplos dispositivos.
-- **leituras_sensores** — 154 leituras históricas do ESP32 (Wokwi) + leituras simuladas pelo APScheduler.
+- **leituras_sensores** — 153 leituras históricas do ESP32 (Wokwi) + leituras simuladas pelo APScheduler.
 - **amostras_agronomicas** — 2.200 amostras do dataset Cap10, vinculadas às culturas.
 - **previsoes** — histórico de todas as previsões realizadas via interface.
 
@@ -90,7 +90,7 @@ Os melhores pipelines são salvos em `src/ml/models/modelo_<target>.joblib`. As 
 
 ### Limitações conhecidas
 
-1. **Dataset de sensores pequeno:** o CSV histórico contém apenas 154 leituras do ESP32 Wokwi.
+1. **Dataset de sensores pequeno:** o CSV histórico contém apenas 153 leituras do ESP32 Wokwi.
    Modelos de classificação ou regressão treinados diretamente sobre esses dados teriam alta variância.
    Por isso, o ML é treinado exclusivamente no dataset agronômico Cap10 (2.200 amostras).
 

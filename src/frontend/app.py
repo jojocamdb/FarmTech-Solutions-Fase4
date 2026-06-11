@@ -73,8 +73,8 @@ with col1:
 │       ↓                                     │
 │  Scikit-Learn Pipeline                      │
 │  ├── LinearRegression (baseline)            │
-│  ├── Ridge + GridSearchCV                   │
-│  └── RandomForestRegressor ← melhor         │
+│  ├── Ridge (GridSearchCV)                   │
+│  └── RandomForestRegressor                  │
 │       ↓                                     │
 │  Dashboard Streamlit (7 páginas)            │
 └─────────────────────────────────────────────┘

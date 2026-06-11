@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 import pandas as pd
 import streamlit as st
 
-from src.db.database import get_culturas, get_ultima_leitura, mediana_cultura
+from src.db.database import get_culturas, get_ultima_leitura, media_cultura
 from src.ml.train import carregar_modelo
 
 st.set_page_config(page_title="Recomendacoes — FarmTech", layout="wide")
@@ -152,36 +152,36 @@ else:
         ),
     })
 
-# 2. NPK — comparar com mediana da cultura
-medianas = mediana_cultura(cultura)
-if medianas:
-    n_med = medianas["n_med"] or 0
-    p_med = medianas["p_med"] or 0
-    k_med = medianas["k_med"] or 0
+# 2. NPK — comparar com media da cultura
+medias = media_cultura(cultura)
+if medias:
+    n_med = medias["n_med"] or 0
+    p_med = medias["p_med"] or 0
+    k_med = medias["k_med"] or 0
     tol = 0.25  # ± 25% de tolerancia
 
     ajustes = []
     if n and abs(n - n_med) / (n_med + 1) > tol:
         direcao = "aumentar" if n < n_med else "reduzir"
-        ajustes.append(f"N: {n:.0f} kg/ha (mediana da cultura: {n_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"N: {n:.0f} kg/ha (media da cultura: {n_med:.0f} kg/ha) — {direcao} aplicacao")
     if p and abs(p - p_med) / (p_med + 1) > tol:
         direcao = "aumentar" if p < p_med else "reduzir"
-        ajustes.append(f"P: {p:.0f} kg/ha (mediana da cultura: {p_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"P: {p:.0f} kg/ha (media da cultura: {p_med:.0f} kg/ha) — {direcao} aplicacao")
     if k and abs(k - k_med) / (k_med + 1) > tol:
         direcao = "aumentar" if k < k_med else "reduzir"
-        ajustes.append(f"K: {k:.0f} kg/ha (mediana da cultura: {k_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"K: {k:.0f} kg/ha (media da cultura: {k_med:.0f} kg/ha) — {direcao} aplicacao")
 
     if ajustes:
         recomendacoes.append({
             "tipo": "warning",
             "titulo": "Ajuste de Macronutrientes Recomendado",
-            "texto": "Comparando com a mediana historica da cultura selecionada:\n\n" + "\n\n".join(f"- {a}" for a in ajustes),
+            "texto": "Comparando com a media historica da cultura selecionada:\n\n" + "\n\n".join(f"- {a}" for a in ajustes),
         })
     else:
         recomendacoes.append({
             "tipo": "success",
             "titulo": "Macronutrientes Adequados",
-            "texto": f"N, P e K estao dentro da faixa esperada para {cultura} (± 25% da mediana historica).",
+            "texto": f"N, P e K estao dentro da faixa esperada para {cultura} (± 25% da media historica).",
         })
 
 # 3. Correcao de pH

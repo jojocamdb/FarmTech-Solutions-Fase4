@@ -53,9 +53,8 @@ def _build_preprocessor() -> ColumnTransformer:
 
 def _build_models() -> dict:
     """Retorna dicionário de pipelines candidatos."""
-    preprocessor = _build_preprocessor()
     ridge_cv = GridSearchCV(
-        Ridge(),
+        Pipeline([("pre", _build_preprocessor()), ("ridge", Ridge())]),
         param_grid={"ridge__alpha": [0.1, 1.0, 10.0, 100.0]},
         cv=3,
         scoring="r2",
@@ -65,12 +64,7 @@ def _build_models() -> dict:
         "LinearRegression": Pipeline(
             [("pre", _build_preprocessor()), ("lr", LinearRegression())]
         ),
-        "Ridge": Pipeline(
-            [
-                ("pre", _build_preprocessor()),
-                ("ridge", Ridge()),
-            ]
-        ),
+        "Ridge": ridge_cv,
         "RandomForest": Pipeline(
             [
                 ("pre", _build_preprocessor()),

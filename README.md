@@ -37,7 +37,7 @@ da FIAP. A solução consolida dados de sensores IoT (ESP32 simulado no Wokwi, o
 com um pipeline de Machine Learning supervisionado (Scikit-Learn), entregando um dashboard interativo em
 Streamlit apoiado por um banco de dados SQLite modelado de forma relacional e normalizada.
 
-O sistema parte de dois conjuntos de dados reais: 154 leituras do sensor ESP32 (umidade, temperatura, pH,
+O sistema parte de dois conjuntos de dados reais: 153 leituras do sensor ESP32 (umidade, temperatura, pH,
 luminosidade, presença de N/P/K e estado da bomba de irrigação) e 2.200 amostras agronômicas de 22 culturas
 (N, P, K, temperatura, umidade, pH e precipitação). Esses dados alimentam um banco SQLite com cinco tabelas
 normalizadas (`culturas`, `sensores`, `leituras_sensores`, `amostras_agronomicas`, `previsoes`), com
@@ -66,7 +66,7 @@ dos sensores (acionamento de bomba, ajuste de NPK e correção de pH, sempre com
 explícita); e histórico de previsões com exportação em CSV.
 
 Uma premissa importante e documentada é que `rainfall` é tratado como **interpretação de necessidade
-hídrica**, e não como medida direta de rendimento. Da mesma forma, reconhece-se que o dataset de 154 leituras
+hídrica**, e não como medida direta de rendimento. Da mesma forma, reconhece-se que o dataset de 153 leituras
 de sensor é pequeno — por isso os modelos de ML são treinados exclusivamente sobre o dataset agronômico de
 2.200 amostras, evitando alta variância. Essas e outras limitações estão detalhadas em
 `document/relatorio.md`.
@@ -106,8 +106,8 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 
 ### Execução no Replit
 
-A aplicação já está configurada para subir automaticamente via workflow. O banco de dados e os modelos de ML
-são gerados na primeira execução. Para reinicializá-los manualmente, abra o Shell e execute:
+A aplicação sobe automaticamente via workflow. Antes de abrir as páginas além da Home, o banco de dados e os
+modelos de ML precisam existir — gere-os pelo Shell:
 
 ```bash
 python scripts/init_db.py   # recria o banco e carrega os CSVs
