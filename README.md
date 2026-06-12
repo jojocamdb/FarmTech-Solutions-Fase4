@@ -146,6 +146,8 @@ streamlit run src/frontend/app.py
 
 Acesse o dashboard em `http://localhost:8501` (local) ou na porta indicada pelo Streamlit.
 
+Ou também é possível acessar em: https://smart-irrigation-system.replit.app/Pipeline_ML
+
 ---
 
 ## 🗃 Histórico de lançamentos
