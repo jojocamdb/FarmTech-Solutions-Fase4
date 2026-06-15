@@ -8,6 +8,8 @@
 
 # FarmTech Solutions — Assistente Agrícola Inteligente
 
+**Repositório:** [github.com/jojocamdb/FarmTech-Solutions-Fase4](https://github.com/jojocamdb/FarmTech-Solutions-Fase4/tree/main)
+
 ## Grupo 47
 
 ## 👨‍🎓 Integrantes
@@ -71,6 +73,10 @@ de sensor é pequeno — por isso os modelos de ML são treinados exclusivamente
 2.200 amostras, evitando alta variância. Essas e outras limitações estão detalhadas em
 `document/relatorio.md`.
 
+O **`main.py`** na raiz do projeto centraliza a execução em um **menu interativo** que segue a ordem lógica
+do pipeline (ingestão → ML → dashboard), exibe o status de cada etapa e permite rodar o fluxo completo ou
+etapas isoladas, tanto pelo menu quanto por argumentos de linha de comando.
+
 ---
 
 ## 📁 Estrutura de pastas
@@ -86,6 +92,10 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 - **document**: documentos do projeto. Contém `der.md` (Diagrama Entidade-Relacionamento em Mermaid com as decisões de modelagem) e `relatorio.md` (relatório técnico completo).
 
 - **scripts**: scripts auxiliares para tarefas específicas. Contém `init_db.py`, que cria o schema do banco e realiza a carga inicial dos dois CSVs.
+
+- **main.py**: launcher integrado na raiz do projeto. Oferece menu interativo do pipeline, verificação de
+  status (banco SQLite e modelos `.joblib`), execução automática das etapas pendentes e atalhos CLI
+  (`--pipeline`, `--ingestao`, `--treinar`, `--dashboard`). É o ponto de entrada recomendado da aplicação.
 
 - **src**: todo o código-fonte criado para o desenvolvimento do projeto:
   - `dados/`: os dois datasets originais (`historico_irrigacao.csv` e `Atividade_Cap10_produtos_agricolas.csv`).
@@ -104,53 +114,150 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 - Python 3.11 ou superior
 - pip
 
+### Forma recomendada — `main.py` (menu do pipeline)
+
+Após instalar as dependências, execute na raiz do projeto:
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+Será exibido um **menu interativo** com o status de cada etapa e as opções do pipeline:
+
+```
+====================================================
+  FarmTech Solutions — Menu do Pipeline
+====================================================
+
+  Status atual:
+    [1] Banco SQLite ........ OK
+    [2] Modelos ML .......... OK
+
+  Pipeline (ordem do projeto):
+    1 - Ingestao de dados (CSV -> SQLite)
+    2 - Treinamento ML (Scikit-Learn)
+    3 - Dashboard Streamlit
+    4 - Pipeline completo (1 -> 2 -> 3)
+    0 - Sair
+
+Escolha uma opcao:
+```
+
+#### Opções do menu
+
+| Opção | Etapa | O que faz |
+|---|---|---|
+| **1** | Ingestão | Carrega os CSVs em `src/dados/` para o SQLite via `scripts/init_db.py`. Se o banco já existir, pede confirmação antes de recriar. |
+| **2** | ML | Treina os modelos de regressão via `src/ml/train.py`. Exige banco criado. Se os `.joblib` já existirem, pede confirmação antes de retreinar. |
+| **3** | Dashboard | Abre o Streamlit em `src/frontend/app.py`. Exige banco e modelos prontos. |
+| **4** | Pipeline completo | Executa automaticamente as etapas **1** e **2** somente se estiverem pendentes e, em seguida, abre o dashboard (**3**). |
+| **0** | Sair | Encerra o programa. |
+
+Após encerrar o dashboard com **Ctrl+C**, o menu é exibido novamente (no Windows o processo Streamlit é
+finalizado corretamente).
+
+#### Atalhos de linha de comando (sem menu)
+
+Úteis em automações, Replit ou quando você já sabe qual etapa executar:
+
+```bash
+python main.py --pipeline     # etapas pendentes + dashboard (sem menu)
+python main.py --ingestao     # força etapa 1 (recria o banco)
+python main.py --treinar      # força etapa 2 (retreina os modelos)
+python main.py --dashboard    # apenas etapa 3
+python main.py --help         # lista todos os argumentos
+```
+
+| Flag | Comportamento |
+|---|---|
+| `--pipeline` | Modo automático: cria banco e treina modelos **somente se ausentes**, depois abre o dashboard. |
+| `--ingestao` | Executa a ingestão **sem pedir confirmação** (recria `farmtech.db`). |
+| `--treinar` | Executa o treinamento **sem pedir confirmação** (sobrescreve os `.joblib`). |
+| `--dashboard` | Abre o Streamlit; falha com aviso se banco ou modelos não existirem. |
+
+#### Ordem e dependências do pipeline
+
+```
+CSVs (src/dados/)
+       │
+       ▼  [1] init_db.py
+SQLite (src/db/farmtech.db)
+       │
+       ▼  [2] train.py
+Modelos (src/ml/models/*.joblib)
+       │
+       ▼  [3] Streamlit
+Dashboard (src/frontend/app.py)
+```
+
+| Etapa | Arquivo gerado / usado | Condição no modo automático |
+|---|---|---|
+| 1 — Ingestão | `src/db/farmtech.db` | Roda se o banco **não existir** |
+| 2 — ML | `modelo_rainfall.joblib`, `modelo_humidity.joblib` | Roda se algum `.joblib` **faltar** |
+| 3 — Dashboard | — | Sempre executado ao final |
+
+Os modelos treinados (`.joblib`) e artefatos de diagnóstico (`metricas.json`, `residuos_*.csv`) estão
+versionados em `src/ml/models/`. O banco `farmtech.db` **não** vai para o Git — é gerado localmente na
+etapa 1.
+
+Acesse o dashboard em `http://localhost:8080` (porta padrão do `main.py`). Para alterar a porta, defina a
+variável de ambiente `PORT`.
+
+**Windows (PowerShell):**
+
+```powershell
+cd <pasta-do-projeto>
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+copy config\.env.example .env   # opcional
+python main.py
+```
+
+**Linux / Mac:**
+
+```bash
+cd <pasta-do-projeto>
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp config/.env.example .env     # opcional
+python main.py
+```
+
 ### Execução no Replit
 
-A aplicação sobe automaticamente via workflow. Antes de abrir as páginas além da Home, o banco de dados e os
-modelos de ML precisam existir — gere-os pelo Shell:
+Configure o workflow para executar:
 
 ```bash
-python scripts/init_db.py   # recria o banco e carrega os CSVs
-python src/ml/train.py      # treina e persiste os modelos de ML
+python main.py --pipeline
 ```
 
-O dashboard fica disponível no painel de preview do Replit.
+O flag `--pipeline` evita o menu interativo e garante setup automático na primeira execução antes de abrir
+o dashboard no painel de preview.
 
-### Execução local
+### Execução manual (opcional)
+
+Os scripts abaixo continuam disponíveis para uso direto, sem passar pelo `main.py`:
 
 ```bash
-# 1. Clonar o repositório
-git clone <url-do-repositorio>
-cd <pasta-do-projeto>
-
-# 2. Criar e ativar um ambiente virtual
-python -m venv .venv
-source .venv/bin/activate      # Linux/Mac
-.venv\Scripts\activate         # Windows
-
-# 3. Instalar as dependências
-pip install -r requirements.txt
-
-# 4. (Opcional) Configurar variáveis de ambiente
-cp config/.env.example .env
-
-# 5. Inicializar o banco de dados
-python scripts/init_db.py
-
-# 6. Treinar os modelos de ML
-python src/ml/train.py
-
-# 7. Iniciar o dashboard
-streamlit run src/frontend/app.py
+python scripts/init_db.py              # recria o banco e recarrega os CSVs
+python src/ml/train.py                 # treina e persiste os modelos de ML
+streamlit run src/frontend/app.py      # apenas o dashboard (porta 8501 por padrao)
 ```
 
-Acesse o dashboard em `http://localhost:8501` (local) ou na porta indicada pelo Streamlit.
-
-Ou também é possível acessar em: https://smart-irrigation-system.replit.app/Pipeline_ML
+Deploy online de referência: https://smart-irrigation-system.replit.app/Pipeline_ML
 
 ---
 
 ## 🗃 Histórico de lançamentos
+
+- 1.1.0 — 15/06/2026
+  - Menu interativo no `main.py` com pipeline ordenado (ingestão → ML → dashboard).
+  - Atalhos CLI: `--pipeline`, `--ingestao`, `--treinar`, `--dashboard`.
+  - Encerramento do Streamlit com Ctrl+C corrigido no Windows.
+  - Documentação de execução atualizada no README.
 
 - 1.0.0 — 11/06/2026
   - Dashboard Streamlit completo com 7 páginas.
