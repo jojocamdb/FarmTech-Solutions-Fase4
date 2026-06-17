@@ -37,14 +37,15 @@ O **FarmTech Solutions** é um Assistente Agrícola Inteligente desenvolvido par
 da FIAP. A solução consolida dados de sensores IoT simulados no Wokwi em fases anteriores
 com um pipeline de Machine Learning supervisionado (Scikit-Learn), entregando um dashboard interativo em
 Streamlit apoiado por um banco de dados SQLite modelado de forma relacional e normalizada.
+O Streamlit foi adotado por estar alinhado à orientação principal de dashboard interativo em Streamlit,
+Power BI ou ferramenta similar.
 
-O sistema parte de dois conjuntos de dados utilizados no protótipo: um histórico de 153 leituras de sensores IoT simuladas no contexto do ESP32/Wokwi (umidade, temperatura, pH, luminosidade, presença de N/P/K e estado da bomba de irrigação) e uma base agronômica de referência com 2.200 amostras de 22 culturas (N, P, K, temperatura, umidade, pH e precipitação).
+O sistema parte de dois conjuntos de dados utilizados no protótipo: um conjunto de 153 leituras registradas/simuladas no contexto do ESP32/Wokwi (umidade, temperatura, pH, luminosidade, presença de N/P/K e estado da bomba de irrigação) e uma base agronômica de referência com 2.200 amostras de 22 culturas (N, P, K, temperatura, umidade, pH e precipitação). No módulo IoT, N/P/K são indicadores simplificados de presença do protótipo; no modelo de ML, N, P e K são valores numéricos do dataset agrícola usados como features de entrada.
 
 Esses dados alimentam um banco SQLite com cinco tabelas normalizadas (`culturas`, `sensores`, `leituras_sensores`, `amostras_agronomicas`, `previsoes`), com integridade referencial garantida por chaves estrangeiras e consultas parametrizadas, reduzindo significativamente o risco de SQL injection.
 
-Para simular a operação contínua de campo, um **scheduler** (APScheduler 3.x) gera novas leituras de sensor
-a cada 30 segundos, derivadas da distribuição estatística (média e desvio) das leituras históricas, com a lógica de acionamento da bomba simulando a regra utilizada no firmware do ESP32 (liga quando a umidade cai
-abaixo do limiar configurado).
+Para simular a operação contínua do protótipo, um **scheduler** (APScheduler 3.x) gera novas leituras de sensor
+a cada 30 segundos. A geração usa parâmetros aproximados definidos a partir do conjunto de leituras simuladas/registradas do protótipo e mantém a lógica de acionamento da bomba simulando a regra utilizada no firmware do ESP32 (liga quando a umidade cai abaixo do limiar configurado).
 
 O núcleo de inteligência consiste em **dois modelos de regressão** treinados independentemente: um para
 `rainfall` — interpretado como **proxy de necessidade hídrica** da cultura — e outro para `humidity` — a
@@ -55,13 +56,17 @@ do Scikit-Learn, garantindo um fluxo de pré-processamento reprodutível. A aval
 80/20 com `random_state` fixo, validação cruzada K-Fold (k=5) e as métricas MAE, MSE, RMSE e R², além de análise de resíduos e interpretação da importância das variáveis quando disponível.
 
 O dashboard é organizado em **sete páginas**: visão geral com status do banco e arquitetura; monitoramento
-de sensores IoT em tempo quase real; análise exploratória (heatmaps, distribuições, boxplots e scatter);
-pipeline de ML com tabela comparativa, resíduos, feature importance e botão para retreinar; previsão interativa com formulário validado; recomendações de manejo que cruzam a previsão do modelo com as leituras registradas no banco (acionamento de bomba, ajuste de NPK e correção de pH, sempre com justificativa numérica
+de leituras registradas/simuladas do protótipo ESP32/Wokwi; análise exploratória (heatmaps, distribuições, boxplots e scatter);
+pipeline de ML com tabela comparativa, resíduos, feature importance quando aplicável e botão para retreinar; previsão interativa com formulário validado; recomendações de manejo que cruzam a previsão do modelo com as leituras registradas no banco (indicativos de bomba, ajuste de NPK e correção de pH, sempre com justificativa numérica
 explícita); e histórico de previsões com exportação em CSV.
 
-Uma premissa importante e documentada é que `rainfall` é tratado como **interpretação de necessidade
-hídrica**, e não como medida direta de rendimento. Da mesma forma, reconhece-se que o dataset de 153 leituras
-de sensor é pequeno — por isso os modelos de ML são treinados exclusivamente sobre o dataset agronômico de 2.200 amostras, reduzindo o risco de alta variância associado ao uso de uma base muito pequena. Essas e outras limitações estão detalhadas em
+Uma premissa importante e documentada é que `rainfall` é tratado como **proxy de necessidade hídrica**,
+e não como medição direta de lâmina de irrigação aplicada em campo nem como variável-alvo de produtividade.
+Esta versão não prevê produtividade diretamente: a produtividade é tratada apenas de forma indireta, pelas
+condições agronômicas analisadas e pelos indicativos simplificados de manejo. Da mesma forma, reconhece-se
+que o dataset de 153 leituras de sensor é pequeno — por isso os modelos de ML são treinados exclusivamente
+sobre o dataset agronômico de 2.200 amostras, reduzindo o risco de alta variância associado ao uso de uma
+base muito pequena. Essas e outras limitações estão detalhadas em
 `document/relatorio.md`.
 
 O **`main.py`** na raiz do projeto centraliza a execução em um **menu interativo** que segue a ordem lógica
@@ -80,6 +85,8 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 
 - **config**: arquivos de configuração com parâmetros do projeto. Contém `.env.example` com as variáveis de ambiente de referência (caminho do banco, limiar de umidade da bomba e intervalo do scheduler).
 
+- **.streamlit**: configuração pública/neutra do Streamlit em `config.toml`. Porta, modo local e abertura do navegador são controlados pelo `main.py`.
+
 - **document**: documentos do projeto. Contém `der.md` (Diagrama Entidade-Relacionamento em Mermaid com as decisões de modelagem) e `relatorio.md` (relatório técnico completo).
 
 - **scripts**: scripts auxiliares para tarefas específicas. Contém `init_db.py`, que cria o schema do banco e realiza a carga inicial dos dois CSVs.
@@ -90,7 +97,7 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 
 - **src**: todo o código-fonte criado para o desenvolvimento do projeto:
   - `dados/`: os dois datasets originais (`historico_irrigacao.csv` e `Atividade_Cap10_produtos_agricolas.csv`).
-  - `db/`: módulo de acesso ao banco SQLite (`database.py`) e o arquivo `farmtech.db` gerado.
+  - `db/`: módulo de acesso ao SQLite (`database.py`) e o arquivo `farmtech.db`, gerado localmente pela etapa de ingestão e não versionado no Git.
   - `ml/`: pipeline de treino (`train.py`) e os modelos persistidos em `models/` (`.joblib`, métricas em JSON e CSVs de diagnóstico).
   - `frontend/`: a aplicação Streamlit — `app.py` (Home e ponto de entrada), `scheduler.py` (simulação IoT) e as seis páginas em `pages/`.
 
@@ -105,9 +112,9 @@ Dentre os arquivos e pastas presentes na raiz do projeto, definem-se:
 - Python 3.11 ou superior
 - pip
 
-### Forma recomendada — `main.py` (menu do pipeline)
+### Forma recomendada local — `main.py` (menu do pipeline)
 
-Após instalar as dependências, execute na raiz do projeto:
+Após instalar as dependências, execute `python main.py` na raiz do projeto:
 
 ```bash
 pip install -r requirements.txt
@@ -194,8 +201,8 @@ etapa 1.
 
 Ao executar novamente o treinamento, esses artefatos são regenerados e podem apresentar pequenas variações numéricas sem alterar necessariamente a conclusão técnica do modelo.
 
-Acesse o dashboard em `http://localhost:8080` (porta padrão do `main.py`). Para alterar a porta, defina a
-variável de ambiente `PORT`.
+Acesse o dashboard localmente em `http://localhost:8501` (porta padrão local do `main.py`). Use `PORT`
+apenas em deploy/servidor, quando a plataforma definir essa variável; não defina `PORT` no `.env` local.
 
 **Windows (PowerShell):**
 
@@ -239,8 +246,6 @@ python scripts/init_db.py              # recria o banco e recarrega os CSVs
 python src/ml/train.py                 # treina e persiste os modelos de ML
 streamlit run src/frontend/app.py      # apenas o dashboard (porta 8501 por padrao)
 ```
-
-Deploy online de referência: https://smart-irrigation-system.replit.app/Pipeline_ML
 
 ---
 
