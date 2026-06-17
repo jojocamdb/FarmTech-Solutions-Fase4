@@ -20,7 +20,7 @@ load_dotenv()
 UMIDADE_LIMIAR = float(os.getenv("UMIDADE_LIMIAR", "60.0"))
 INTERVALO = int(os.getenv("SCHEDULER_INTERVALO", "30"))
 
-# Parâmetros da distribuição histórica (calculados do CSV real)
+# Parâmetros aproximados usados para simular leituras do protótipo ESP32/Wokwi.
 _DIST = {
     "umidade":  {"media": 73.5,  "desvio": 12.0,  "min": 30.0, "max": 95.0},
     "temp_c":   {"media": 28.5,  "desvio": 5.5,   "min": 14.0, "max": 40.0},
@@ -30,7 +30,7 @@ _DIST = {
 
 
 def _gerar_leitura() -> dict:
-    """Gera uma leitura simulada com base na distribuição histórica."""
+    """Gera uma leitura simulada para registro do protótipo ESP32/Wokwi."""
     def sample(chave: str) -> float:
         d = _DIST[chave]
         v = np.random.normal(d["media"], d["desvio"])
