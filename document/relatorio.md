@@ -1,8 +1,8 @@
 # Relatório Técnico — FarmTech Solutions
 ## Fase 4 — Assistente Agrícola Inteligente
 
-**FIAP — Pós-Graduação em Inteligência Artificial para Devs**
-Grupo 47 | Junho de 2026
+**FIAP — Tecnólogo em Inteligência Artificial**
+Junho de 2026
 
 ---
 
@@ -16,11 +16,10 @@ O banco SQLite (`farmtech.db`) é composto por cinco tabelas normalizadas:
 - **sensores** — cadastro de sensores IoT; permite registrar múltiplos dispositivos.
 - **leituras_sensores** — 153 leituras históricas do ESP32 (Wokwi) + leituras simuladas pelo APScheduler.
 - **amostras_agronomicas** — 2.200 amostras do dataset Cap10, vinculadas às culturas.
-- **previsoes** — histórico de todas as previsões realizadas via interface.
+- **previsoes** — histórico das previsões registradas via interface.
 
-A separação em tabelas distintas evita redundância e garante integridade referencial via chaves estrangeiras
-(`PRAGMA foreign_keys = ON`). Todas as queries são parametrizadas — nunca há interpolação direta de variáveis
-em SQL.
+A separação em tabelas distintas reduz redundância e organiza a integridade referencial por meio de chaves estrangeiras. Na camada de acesso ao banco, o projeto habilita `PRAGMA foreign_keys = ON`, e as operações revisadas utilizam consultas parametrizadas, reduzindo o risco de SQL injection.
+
 
 ### Script de inicialização
 
@@ -33,19 +32,13 @@ separação `===` presente no CSV de irrigação é ignorada via verificação e
 
 ### rainfall — proxy de necessidade hídrica
 
-**Importante:** `rainfall` (chuva em mm) **não é uma medição direta de rendimento**. No dataset agronômico
-Cap10, essa coluna representa a precipitação pluviométrica histórica associada às condições de cultivo
-favoráveis à cultura. Usamos `rainfall` como **proxy de necessidade hídrica** — culturas com alta rainfall
-histórica geralmente demandam mais água para se desenvolver adequadamente.
+**Importante:** `rainfall` representa a precipitação pluviométrica histórica associada às condições de cultivo do dataset agronômico. Neste projeto, a variável é usada como proxy para apoiar a análise de necessidade hídrica, mas não corresponde diretamente ao volume de irrigação que deve ser aplicado no campo.
 
-Essa é uma interpretação prática, não uma relação causal direta. A recomendação de irrigação deve ser
-complementada com a leitura real dos sensores (umidade, temperatura) e com o conhecimento agronômico local.
+Essa interpretação é uma aproximação prática para fins de protótipo acadêmico. Valores mais altos de `rainfall` podem indicar culturas ou condições historicamente associadas a maior disponibilidade hídrica, mas a decisão de irrigação deve considerar também as leituras dos sensores, a umidade do solo, o estágio da cultura e a validação agronômica local.
 
 ### humidity — umidade ambiental esperada
 
-`humidity` representa a umidade relativa do ar esperada para que a cultura prospere nas condições fornecidas
-(N, P, K, temperatura, pH). É usada para comparar com a umidade medida pelos sensores e sugerir
-ajustes microclimáticos (ventilação, cobertura, irrigação por aspersão).
+`humidity` representa a umidade relativa do ar associada às condições de cultivo registradas no dataset agronômico, considerando N, P, K, temperatura, pH e cultura. No protótipo, essa previsão é usada como referência comparativa em relação às leituras simuladas dos sensores, apoiando recomendações simplificadas de manejo. A variável não deve ser interpretada como medição em tempo real nem como recomendação agronômica conclusiva.
 
 ---
 
@@ -77,12 +70,12 @@ ColumnTransformer
 - **Validação cruzada:** K-Fold, k=5, métrica R². Reporta média ± desvio padrão.
 - **Métricas no teste:** MAE, MSE, RMSE, R².
 - **Análise de resíduos:** gráfico resíduo vs previsto + histograma de resíduos.
-- **Feature importance:** Random Forest, top 15 features exibidas no dashboard.
+- **Feature importance:** exibida apenas quando o modelo selecionado permite esse tipo de interpretação, como no caso do `RandomForestRegressor`. Nos treinamentos em que o modelo selecionado for linear ou regularizado, essa análise não é apresentada como explicação principal.
 
 ### Persistência
 
-Os melhores pipelines são salvos em `src/ml/models/modelo_<target>.joblib`. As métricas são salvas em
-`src/ml/models/metricas.json` para consumo pelo dashboard sem re-executar o treinamento.
+Os pipelines selecionados pelo maior R² no conjunto de teste são salvos em `src/ml/models/modelo_<target>.joblib`. As métricas são registradas em `src/ml/models/metricas.json`, permitindo que o dashboard consulte os resultados do treinamento sem reexecutar o pipeline a cada acesso.
+
 
 ---
 
@@ -105,19 +98,18 @@ Os melhores pipelines são salvos em `src/ml/models/modelo_<target>.joblib`. As 
 4. **Dados simulados pelo scheduler:** as leituras geradas pelo APScheduler seguem a distribuição
    histórica do ESP32, mas são sintéticas. Não substituem dados reais de campo.
 
-### Interpretação do R²
+### Interpretação dos resultados do treinamento
 
-- R² próximo de 1.0: o modelo explica grande parte da variância do target.
-- R² negativo: o modelo performa pior que simplesmente prever a média (indica problema de ajuste).
-- Para `humidity`, esperamos R² alto pois há forte correlação com cultura e condições N/P/K.
-- Para `rainfall`, o R² pode ser menor dado que precipitação tem maior variabilidade mesmo dentro
-  da mesma cultura.
+No treinamento atual, o modelo `Ridge` foi selecionado para os dois targets por apresentar o maior R² no conjunto de teste. Para `rainfall`, o Ridge obteve MAE de aproximadamente 14,35, RMSE de 23,16 e R² de 0,8219. Para `humidity`, obteve MAE de aproximadamente 3,10, RMSE de 4,54 e R² de 0,9617.
+
+A diferença entre `LinearRegression` e `Ridge` foi pequena nos dois casos, o que indica que a regularização L2 trouxe ganho marginal, mas suficiente para ser selecionada pelo critério definido no pipeline. O `RandomForestRegressor`, embora útil como modelo comparativo, apresentou R² inferior para os dois targets neste treinamento.
+
+O desempenho de `humidity` foi mais alto que o de `rainfall`, sugerindo que a umidade apresenta relação mais estável com as variáveis disponíveis no dataset. Já `rainfall` tende a ser mais variável, pois representa precipitação histórica associada às condições da cultura e não um volume direto de irrigação recomendado.
 
 ---
 
 ## 5. Simulação IoT com APScheduler
 
-O `APScheduler` (versão 3.x, `BackgroundScheduler`) é iniciado uma única vez por sessão Streamlit
-via `st.session_state`. A cada 30 segundos, um job gera valores com base na distribuição histórica
-do sensor ESP32 (média e desvio por variável) e insere na tabela `leituras_sensores`. A lógica de
-`bomba_fw` segue o mesmo critério do hardware: liga quando `umidade < UMIDADE_LIMIAR` (padrão: 60%).
+O `APScheduler` (versão 3.x, `BackgroundScheduler`) é iniciado uma única vez por sessão Streamlit via `st.session_state`. A cada 30 segundos, um job gera valores com base na distribuição histórica do sensor ESP32, considerando média e desvio por variável, e insere os registros na tabela `leituras_sensores`.
+
+A lógica de `bomba_fw` simula o critério utilizado no protótipo de hardware: a bomba é acionada quando `umidade < UMIDADE_LIMIAR`, com limiar padrão de 60%. Essa simulação apoia a visualização do fluxo IoT no dashboard, mas não substitui medições reais de campo.
