@@ -1,6 +1,9 @@
 """
 Script de inicialização do banco de dados FarmTech Solutions.
-Cria o schema normalizado e carrega os dois CSVs.
+Cria o schema normalizado e carrega dois CSVs:
+- historico_irrigacao.csv: leituras registradas/simuladas do protótipo ESP32/Wokwi.
+- Atividade_Cap10_produtos_agricolas.csv: dataset agronômico fornecido pela FIAP,
+  já utilizado na entrega da FarmTech na Fase 3.
 
 Uso:
     python scripts/init_db.py
@@ -85,7 +88,7 @@ def criar_schema(conn: sqlite3.Connection) -> None:
 
 
 def seed_sensores(conn: sqlite3.Connection) -> int:
-    """Garante que o sensor ESP32 está cadastrado e retorna seu id."""
+    """Garante que o sensor do protótipo ESP32/Wokwi está cadastrado e retorna seu id."""
     row = conn.execute("SELECT id FROM sensores WHERE origem = 'ESP32'").fetchone()
     if row:
         return row[0]
@@ -98,7 +101,7 @@ def seed_sensores(conn: sqlite3.Connection) -> int:
 
 
 def carregar_irrigacao(conn: sqlite3.Connection, sensor_id: int) -> int:
-    """Carrega historico_irrigacao.csv na tabela leituras_sensores."""
+    """Carrega leituras registradas/simuladas do protótipo na tabela leituras_sensores."""
     count = 0
     with open(CSV_IRRIGACAO, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -135,7 +138,7 @@ def carregar_irrigacao(conn: sqlite3.Connection, sensor_id: int) -> int:
 
 
 def carregar_agricola(conn: sqlite3.Connection) -> int:
-    """Carrega Atividade_Cap10_produtos_agricolas.csv na tabela amostras_agronomicas."""
+    """Carrega o dataset agronômico fornecido pela FIAP na tabela amostras_agronomicas."""
     cultura_ids: dict[str, int] = {}
     count = 0
 
