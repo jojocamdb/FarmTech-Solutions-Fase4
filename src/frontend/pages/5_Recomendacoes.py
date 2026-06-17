@@ -1,9 +1,9 @@
 """
-Pagina: Recomendacoes de Manejo — cruzamento de previsao ML com leituras reais.
+Pagina: Recomendacoes de Manejo — cruzamento de previsao ML com leituras registradas do prototipo.
 """
 
+
 import sys
-import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -18,7 +18,7 @@ from src.ml.train import carregar_modelo
 st.set_page_config(page_title="Recomendacoes — FarmTech", layout="wide")
 
 st.title("Recomendacoes de Manejo")
-st.caption("Cruzamento da previsao ML com as ultimas leituras reais dos sensores IoT")
+st.caption("Cruzamento da previsao ML com as ultimas leituras registradas dos sensores do prototipo")
 
 UMIDADE_LIMIAR = 60.0
 PH_FAIXAS: dict[str, tuple[float, float]] = {
@@ -66,7 +66,7 @@ if not modelo_rainfall or not modelo_humidity:
     st.stop()
 
 if not ultima:
-    st.warning("Nenhuma leitura de sensor disponivel.")
+    st.warning("Nenhuma leitura registrada de sensor disponivel.")
     st.stop()
 
 # ── Formulario ────────────────────────────────────────────────────────────────
@@ -104,16 +104,17 @@ except Exception as e:
     st.stop()
 
 st.markdown("---")
-st.markdown("### Leituras Reais vs Previsao")
+st.markdown("### Leituras Registradas do Prototipo vs Previsao do Modelo")
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Umidade sensor (%)", f"{ultima['umidade']:.1f}")
-c2.metric("Necessidade hidrica prevista", f"{prev_rainfall:.1f} mm")
-c3.metric("pH sensor", f"{ultima['ph']:.3f}")
+c1.metric("Umidade registrada (%)", f"{ultima['umidade']:.1f}")
+c2.metric("Proxy de necessidade hidrica", f"{prev_rainfall:.1f} mm")
+c3.metric("pH registrado", f"{ultima['ph']:.3f}")
 c4.metric("Umidade esperada pela cultura", f"{prev_humidity:.1f} %")
 
 # ── Recomendacoes ─────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("### Recomendacoes de Manejo")
+st.caption("Recomendacoes simplificadas do prototipo; nao substituem validacao agronomica.")
 
 recomendacoes: list[dict] = []
 
@@ -124,12 +125,12 @@ if prev_rainfall > 150 and umid_sensor < UMIDADE_LIMIAR:
     tempo_est = round(deficit * 0.5, 1)
     recomendacoes.append({
         "tipo": "error",
-        "titulo": "Acionamento da Bomba Recomendado",
+        "titulo": "Atencao para Irrigacao",
         "texto": (
-            f"A necessidade hidrica prevista e alta ({prev_rainfall:.1f} mm) e a umidade "
-            f"atual do sensor ({umid_sensor:.1f}%) esta abaixo do limiar ({UMIDADE_LIMIAR}%). "
+            f"O proxy de necessidade hidrica esta alto ({prev_rainfall:.1f} mm) e a umidade "
+            f"registrada pelo sensor do prototipo ({umid_sensor:.1f}%) esta abaixo do limiar ({UMIDADE_LIMIAR}%). "
             f"Deficit de umidade: {deficit:.1f}%. "
-            f"Tempo estimado de irrigacao: {tempo_est} minutos."
+            f"Estimativa simplificada do prototipo para tempo de irrigacao: {tempo_est} minutos."
         ),
     })
 elif umid_sensor < UMIDADE_LIMIAR:
@@ -138,8 +139,8 @@ elif umid_sensor < UMIDADE_LIMIAR:
         "tipo": "warning",
         "titulo": "Umidade Abaixo do Limiar",
         "texto": (
-            f"Umidade do sensor: {umid_sensor:.1f}% (limiar: {UMIDADE_LIMIAR}%). "
-            f"Deficit: {deficit:.1f}%. Considere irrigacao suplementar."
+            f"Umidade registrada pelo sensor do prototipo: {umid_sensor:.1f}% (limiar: {UMIDADE_LIMIAR}%). "
+            f"Deficit: {deficit:.1f}%. Avalie a necessidade de irrigacao suplementar."
         ),
     })
 else:
@@ -147,8 +148,8 @@ else:
         "tipo": "success",
         "titulo": "Umidade Adequada",
         "texto": (
-            f"Umidade do sensor ({umid_sensor:.1f}%) acima do limiar ({UMIDADE_LIMIAR}%). "
-            "Irrigacao nao necessaria no momento."
+            f"Umidade registrada pelo sensor do prototipo ({umid_sensor:.1f}%) acima do limiar ({UMIDADE_LIMIAR}%). "
+            "Nao ha indicativo imediato de irrigacao pelo criterio simplificado do prototipo."
         ),
     })
 
@@ -163,25 +164,25 @@ if medias:
     ajustes = []
     if n and abs(n - n_med) / (n_med + 1) > tol:
         direcao = "aumentar" if n < n_med else "reduzir"
-        ajustes.append(f"N: {n:.0f} kg/ha (media da cultura: {n_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"N: {n:.0f} kg/ha (media da cultura: {n_med:.0f} kg/ha) — avaliar {direcao} aplicacao")
     if p and abs(p - p_med) / (p_med + 1) > tol:
         direcao = "aumentar" if p < p_med else "reduzir"
-        ajustes.append(f"P: {p:.0f} kg/ha (media da cultura: {p_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"P: {p:.0f} kg/ha (media da cultura: {p_med:.0f} kg/ha) — avaliar {direcao} aplicacao")
     if k and abs(k - k_med) / (k_med + 1) > tol:
         direcao = "aumentar" if k < k_med else "reduzir"
-        ajustes.append(f"K: {k:.0f} kg/ha (media da cultura: {k_med:.0f} kg/ha) — {direcao} aplicacao")
+        ajustes.append(f"K: {k:.0f} kg/ha (media da cultura: {k_med:.0f} kg/ha) — avaliar {direcao} aplicacao")
 
     if ajustes:
         recomendacoes.append({
             "tipo": "warning",
-            "titulo": "Ajuste de Macronutrientes Recomendado",
-            "texto": "Comparando com a media historica da cultura selecionada:\n\n" + "\n\n".join(f"- {a}" for a in ajustes),
+            "titulo": "Atencao para Macronutrientes",
+            "texto": "Comparando com a media do dataset agronomico da cultura selecionada:\n\n" + "\n\n".join(f"- {a}" for a in ajustes),
         })
     else:
         recomendacoes.append({
             "tipo": "success",
-            "titulo": "Macronutrientes Adequados",
-            "texto": f"N, P e K estao dentro da faixa esperada para {cultura} (± 25% da media historica).",
+            "titulo": "Macronutrientes Dentro da Faixa Esperada",
+            "texto": f"N, P e K estao dentro da faixa esperada para {cultura} (± 25% da media do dataset agronomico).",
         })
 
 # 3. Correcao de pH
@@ -191,29 +192,29 @@ ph_min, ph_max = PH_FAIXAS.get(cultura.lower(), PH_PADRAO)
 if ph_sensor < ph_min:
     recomendacoes.append({
         "tipo": "warning",
-        "titulo": "pH Abaixo da Faixa Ideal",
+        "titulo": "pH Abaixo da Faixa de Referencia",
         "texto": (
-            f"pH sensor: {ph_sensor:.3f} | Faixa ideal para {cultura}: {ph_min}–{ph_max}. "
+            f"pH registrado: {ph_sensor:.3f} | Faixa de referencia para {cultura}: {ph_min}–{ph_max}. "
             f"Deficit: {ph_min - ph_sensor:.3f} unidades. "
-            "Recomenda-se calagem (calcario dolomitico) para elevar o pH."
+            "Avalie correcao de pH com orientacao tecnica/agronomica antes de definir calagem."
         ),
     })
 elif ph_sensor > ph_max:
     recomendacoes.append({
         "tipo": "warning",
-        "titulo": "pH Acima da Faixa Ideal",
+        "titulo": "pH Acima da Faixa de Referencia",
         "texto": (
-            f"pH sensor: {ph_sensor:.3f} | Faixa ideal para {cultura}: {ph_min}–{ph_max}. "
+            f"pH registrado: {ph_sensor:.3f} | Faixa de referencia para {cultura}: {ph_min}–{ph_max}. "
             f"Excesso: {ph_sensor - ph_max:.3f} unidades. "
-            "Recomenda-se aplicacao de enxofre agricola ou materia organica para reduzir o pH."
+            "Avalie correcao de pH com orientacao tecnica/agronomica antes de definir enxofre agricola ou materia organica."
         ),
     })
 else:
     recomendacoes.append({
         "tipo": "success",
-        "titulo": "pH Adequado",
+        "titulo": "pH Dentro da Faixa de Referencia",
         "texto": (
-            f"pH sensor ({ph_sensor:.3f}) dentro da faixa ideal para {cultura} ({ph_min}–{ph_max})."
+            f"pH registrado ({ph_sensor:.3f}) dentro da faixa de referencia para {cultura} ({ph_min}–{ph_max})."
         ),
     })
 
