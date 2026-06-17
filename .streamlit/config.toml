@@ -1,8 +1,2 @@
-[server]
-headless = true
-port = 5000
-enableCORS = false
-enableXsrfProtection = false
-
 [browser]
 gatherUsageStats = false
