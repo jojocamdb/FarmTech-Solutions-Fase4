@@ -14,7 +14,7 @@ O banco SQLite (`farmtech.db`) é composto por cinco tabelas normalizadas:
 
 - **culturas** — catálogo de 22 culturas do dataset agronômico.
 - **sensores** — cadastro de sensores IoT; permite registrar múltiplos dispositivos.
-- **leituras_sensores** — 153 leituras históricas do ESP32 (Wokwi) + leituras simuladas pelo APScheduler.
+- **leituras_sensores** — 153 leituras registradas/simuladas do protótipo ESP32/Wokwi + leituras sintéticas geradas pelo APScheduler.
 - **amostras_agronomicas** — 2.200 amostras do dataset Cap10, vinculadas às culturas.
 - **previsoes** — histórico das previsões registradas via interface.
 
@@ -83,7 +83,7 @@ Os pipelines selecionados pelo maior R² no conjunto de teste são salvos em `sr
 
 ### Limitações conhecidas
 
-1. **Dataset de sensores pequeno:** o CSV histórico contém apenas 153 leituras do ESP32 Wokwi.
+1. **Dataset de sensores pequeno:** o CSV de irrigação contém apenas 153 leituras registradas/simuladas do protótipo ESP32/Wokwi.
    Modelos de classificação ou regressão treinados diretamente sobre esses dados teriam alta variância.
    Por isso, o ML é treinado exclusivamente no dataset agronômico Cap10 (2.200 amostras).
 
@@ -95,8 +95,8 @@ Os pipelines selecionados pelo maior R² no conjunto de teste são salvos em `sr
    dia — é um indicador baseado em precipitação histórica associada à cultura. Recomendações baseadas
    nesse valor devem ser validadas por agrônomo.
 
-4. **Dados simulados pelo scheduler:** as leituras geradas pelo APScheduler seguem a distribuição
-   histórica do ESP32, mas são sintéticas. Não substituem dados reais de campo.
+4. **Dados simulados pelo scheduler:** as leituras geradas pelo APScheduler usam parâmetros baseados
+   no conjunto de leituras registradas/simuladas do protótipo, mas são sintéticas. Não substituem validação agronômica com medições de campo.
 
 ### Interpretação dos resultados do treinamento
 
@@ -110,6 +110,6 @@ O desempenho de `humidity` foi mais alto que o de `rainfall`, sugerindo que a um
 
 ## 5. Simulação IoT com APScheduler
 
-O `APScheduler` (versão 3.x, `BackgroundScheduler`) é iniciado uma única vez por sessão Streamlit via `st.session_state`. A cada 30 segundos, um job gera valores com base na distribuição histórica do sensor ESP32, considerando média e desvio por variável, e insere os registros na tabela `leituras_sensores`.
+O `APScheduler` (versão 3.x, `BackgroundScheduler`) é iniciado uma única vez por sessão Streamlit via `st.session_state`. A cada 30 segundos, um job gera valores sintéticos com parâmetros baseados no conjunto de leituras registradas/simuladas do protótipo ESP32/Wokwi, considerando média e desvio por variável, e insere os registros na tabela `leituras_sensores`.
 
-A lógica de `bomba_fw` simula o critério utilizado no protótipo de hardware: a bomba é acionada quando `umidade < UMIDADE_LIMIAR`, com limiar padrão de 60%. Essa simulação apoia a visualização do fluxo IoT no dashboard, mas não substitui medições reais de campo.
+A lógica de `bomba_fw` simula o critério utilizado no protótipo: a bomba é acionada quando `umidade < UMIDADE_LIMIAR`, com limiar padrão de 60%. Essa simulação apoia a visualização do fluxo IoT no dashboard, mas não substitui validação agronômica com medições de campo.
