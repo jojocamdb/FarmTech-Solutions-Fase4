@@ -1,5 +1,5 @@
 """
-Pagina: Previsao em Tempo Real — formulario com cultura e NPK/temp/pH.
+Pagina: Previsao Agricola — formulario com cultura e NPK/temp/pH.
 """
 
 import sys
@@ -17,8 +17,8 @@ from src.ml.train import carregar_modelo, carregar_metricas
 
 st.set_page_config(page_title="Previsao — FarmTech", layout="wide")
 
-st.title("Previsao em Tempo Real")
-st.caption("Preveja necessidade hidrica (rainfall) e umidade esperada (humidity) para uma cultura")
+st.title("Previsao Agricola")
+st.caption("Estime o proxy de necessidade hidrica (rainfall) e a umidade esperada (humidity) para uma cultura")
 
 # ── Carregar culturas ─────────────────────────────────────────────────────────
 try:
@@ -79,14 +79,14 @@ if submeter:
         prev_humidity = max(0.0, min(100.0, prev_humidity))
 
         st.markdown("---")
-        st.markdown("### Resultado da Previsao")
+        st.markdown("### Resultado do Modelo Treinado")
 
         c1, c2 = st.columns(2)
         with c1:
             st.metric(
-                label="Necessidade Hidrica (rainfall proxy)",
+                label="Proxy de Necessidade Hidrica (rainfall)",
                 value=f"{prev_rainfall:.2f} mm",
-                help="Estimativa de chuva/irrigacao necessaria. Interpretado como necessidade hidrica da cultura.",
+                help="Valor previsto para rainfall, usado como proxy de necessidade hidrica. Nao deve ser interpretado como volume direto de irrigacao.",
             )
             met_r = metricas.get("rainfall", {})
             if met_r:
@@ -108,19 +108,22 @@ if submeter:
 
         # Interpretacao da necessidade hidrica
         if prev_rainfall > 150:
-            st.warning("Alta necessidade hidrica — considere aumentar a irrigacao.")
+            st.warning("Proxy indica alta necessidade hidrica; avalie o manejo de irrigacao com dados agronomicos complementares.")
         elif prev_rainfall > 80:
-            st.info("Necessidade hidrica moderada.")
+            st.info("Proxy indica necessidade hidrica moderada.")
         else:
-            st.success("Baixa necessidade hidrica — irrigacao reduzida e suficiente.")
+            st.success("Proxy indica baixa necessidade hidrica no cenario informado.")
 
         # Gravar na tabela previsoes
         params = json.dumps({
             "cultura": cultura, "n": n, "p": p, "k": k,
             "temperatura": temperatura, "ph": ph,
         }, ensure_ascii=False)
-        inserir_previsao("melhor_rainfall", "rainfall", prev_rainfall, params)
-        inserir_previsao("melhor_humidity", "humidity", prev_humidity, params)
+        nome_modelo_r = metricas.get("rainfall", {}).get("melhor_modelo", "modelo_rainfall")
+        nome_modelo_h = metricas.get("humidity", {}).get("melhor_modelo", "modelo_humidity")
+
+        inserir_previsao(nome_modelo_r, "rainfall", prev_rainfall, params)
+        inserir_previsao(nome_modelo_h, "humidity", prev_humidity, params)
 
         st.caption("Previsao registrada na tabela previsoes do banco de dados.")
 
@@ -133,8 +136,8 @@ with st.expander("Informacoes sobre os modelos utilizados"):
         """
 **Premissas importantes:**
 
-- `rainfall` e usado como **proxy de necessidade hidrica** da cultura, nao como medida direta
-  de rendimento. O dataset agronômico usa chuva como variavel de condicao de cultivo.
+- `rainfall` e usado como **proxy de necessidade hidrica** da cultura, nao como volume direto
+  de irrigacao. O dataset agronômico usa chuva como variavel de condicao de cultivo.
 - `humidity` representa a **umidade ambiental esperada** para a cultura nas condicoes fornecidas.
 - Features: N, P, K, temperatura, pH e cultura (one-hot encoding).
 - Modelos comparados: LinearRegression, Ridge (GridSearchCV), RandomForestRegressor.
