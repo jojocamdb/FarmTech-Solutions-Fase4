@@ -192,6 +192,8 @@ Os modelos treinados (`.joblib`) e artefatos de diagnóstico (`metricas.json`, `
 versionados em `src/ml/models/`. O banco `farmtech.db` **não** vai para o Git — é gerado localmente na
 etapa 1.
 
+Ao executar novamente o treinamento, esses artefatos são regenerados e podem apresentar pequenas variações numéricas sem alterar necessariamente a conclusão técnica do modelo.
+
 Acesse o dashboard em `http://localhost:8080` (porta padrão do `main.py`). Para alterar a porta, defina a
 variável de ambiente `PORT`.
 
