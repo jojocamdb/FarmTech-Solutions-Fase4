@@ -10,8 +10,6 @@ sys.path.insert(0, str(ROOT))
 
 import pandas as pd
 import plotly.express as px
-import plotly.figure_factory as ff
-import numpy as np
 import streamlit as st
 
 from src.db.database import get_amostras_agronomicas
@@ -19,7 +17,12 @@ from src.db.database import get_amostras_agronomicas
 st.set_page_config(page_title="Analise Exploratoria — FarmTech", layout="wide")
 
 st.title("Analise Exploratoria")
-st.caption("Dataset Atividade Cap10 — 2.200 amostras, 22 culturas")
+st.caption("Dataset agronômico fornecido pela FIAP, já utilizado na entrega da FarmTech na Fase 3 — 2.200 amostras, 22 culturas")
+st.info(
+    "Esta página analisa o dataset agronômico carregado no banco, não as leituras "
+    "registradas/simuladas do protótipo ESP32/Wokwi. A variável chuva/rainfall é "
+    "usada como proxy nas previsões."
+)
 
 # ── Carregar dados ───────────────────────────────────────────────────────────
 try:
@@ -57,6 +60,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 
 with tab1:
     st.markdown("#### Heatmap de Correlacao (variaveis numericas)")
+    st.caption("Correlação indica associação estatística entre variáveis, não relação causal.")
     corr = df_filt[COLUNAS_NUM].corr()
     fig = px.imshow(
         corr,
