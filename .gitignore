@@ -5,6 +5,12 @@ __pycache__/
 src/db/farmtech.db
 .venv/
 venv/
+.pytest_cache/
+.ipynb_checkpoints/
+*.log
+*.tmp
+Thumbs.db
+.streamlit/secrets.toml
 .DS_Store
 .idea/
 .vscode/
