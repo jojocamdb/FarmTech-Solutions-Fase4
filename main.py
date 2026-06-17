@@ -107,8 +107,14 @@ def etapa_dashboard() -> None:
 
 def run_streamlit() -> None:
     """Inicia o dashboard Streamlit."""
-    port = os.environ.get("PORT", "8080")
-    print(f"\n[3/3 Dashboard] http://localhost:{port}", flush=True)
+    port_env = os.environ.get("PORT")
+    modo_local = port_env is None
+    port = port_env or "8501"
+    address = "localhost" if modo_local else "0.0.0.0"
+    headless = "false" if modo_local else "true"
+    url = f"http://localhost:{port}"
+
+    print(f"\n[3/3 Dashboard] {url}", flush=True)
     print("[3/3 Dashboard] Pressione Ctrl+C para encerrar.\n", flush=True)
 
     cmd = [
@@ -120,19 +126,23 @@ def run_streamlit() -> None:
         "--server.port",
         port,
         "--server.address",
-        "0.0.0.0",
+        address,
         "--server.headless",
-        "true",
+        headless,
         "--server.enableCORS",
         "false",
         "--server.enableXsrfProtection",
         "false",
     ]
 
-    if os.name != "nt":
+    if os.name != "nt" and not modo_local:
         os.execv(sys.executable, cmd)
 
     proc = subprocess.Popen(cmd, cwd=ROOT)
+    if modo_local:
+        import webbrowser
+
+        webbrowser.open(url)
     try:
         proc.wait()
     except KeyboardInterrupt:
@@ -178,6 +188,22 @@ def exibir_menu() -> None:
     print()
 
 
+def _executar_opcao_menu(opcao: str) -> None:
+    if opcao == "1":
+        etapa_ingestao()
+    elif opcao == "2":
+        etapa_treinamento()
+    elif opcao == "3":
+        etapa_dashboard()
+    elif opcao == "4":
+        pipeline_completo()
+
+
+def _pausar_menu() -> None:
+    if sys.stdin.isatty():
+        input("\nPressione Enter para voltar ao menu...")
+
+
 def menu_interativo() -> None:
     """Loop do menu ate o usuario sair ou encerrar o dashboard."""
     os.chdir(ROOT)
@@ -193,16 +219,23 @@ def menu_interativo() -> None:
         if opcao == "0":
             print("Ate logo.")
             return
-        if opcao == "1":
-            etapa_ingestao()
-        elif opcao == "2":
-            etapa_treinamento()
-        elif opcao == "3":
-            etapa_dashboard()
-        elif opcao == "4":
-            pipeline_completo()
-        else:
-            print("Opcao invalida. Use 0, 1, 2, 3 ou 4.")
+        if opcao not in ("1", "2", "3", "4"):
+            print("Opcao invalida. Escolha 0, 1, 2, 3 ou 4.")
+            _pausar_menu()
+            continue
+
+        try:
+            _executar_opcao_menu(opcao)
+        except subprocess.CalledProcessError as e:
+            print(
+                f"\n[ERRO] A etapa falhou com codigo de retorno {e.returncode}."
+            )
+            print("Verifique a mensagem acima e tente novamente pelo menu.")
+            _pausar_menu()
+        except Exception as e:
+            print(f"\n[ERRO] Falha ao executar a opcao {opcao}: {e}")
+            print("O menu sera exibido novamente.")
+            _pausar_menu()
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
