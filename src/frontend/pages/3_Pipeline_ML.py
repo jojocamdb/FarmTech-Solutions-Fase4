@@ -56,7 +56,7 @@ for i, target in enumerate(targets):
         melhor = info["melhor_modelo"]
         metricas_lista = info["metricas"]
 
-        st.markdown(f"**Melhor modelo:** `{melhor}`")
+        st.markdown(f"**Modelo selecionado pelo maior R2 no teste:** `{melhor}`")
 
         # Tabela comparativa
         st.markdown("#### Tabela Comparativa de Modelos")
