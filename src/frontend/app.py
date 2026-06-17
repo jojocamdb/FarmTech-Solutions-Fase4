@@ -39,7 +39,6 @@ with st.sidebar:
     st.caption("Assistente Agricola Inteligente")
     st.markdown("---")
     st.caption("Fase 4 — Projeto FarmTech")
-    st.caption("Grupo 47")
 
 # ── Home ────────────────────────────────────────────────────────────────────
 st.title("FarmTech Solutions")
@@ -47,9 +46,10 @@ st.subheader("Assistente Agricola Inteligente — Visao Geral")
 
 st.markdown(
     """
-    Plataforma de monitoramento e analise para o agronegocio, integrando dados de
-    sensores IoT (ESP32 simulado no Wokwi) com Machine Learning supervisionado
-    para recomendacoes de irrigacao e manejo de culturas.
+    Plataforma de monitoramento e analise para o agronegocio, integrando leituras
+    registradas/simuladas do prototipo ESP32/Wokwi, armazenadas em SQLite, com
+    Machine Learning supervisionado para previsoes agricolas e apoio a decisao
+    no manejo de culturas.
     """
 )
 
@@ -62,7 +62,8 @@ with col1:
 ┌─────────────────────────────────────────────┐
 │              FarmTech Solutions             │
 ├─────────────────────────────────────────────┤
-│  ESP32 (Wokwi)  →  CSV histórico            │
+│  ESP32/Wokwi                                │
+│  → leituras simuladas/registradas           │
 │       ↓                                     │
 │  SQLite (farmtech.db)                       │
 │  ├── culturas                               │
@@ -98,11 +99,11 @@ st.markdown("#### Paginas Disponíveis")
 
 cols = st.columns(3)
 paginas = [
-    ("Sensores IoT", "Monitoramento em tempo quase real das leituras do ESP32 com scheduler ativo."),
+    ("Sensores IoT", "Leituras registradas/simuladas do prototipo ESP32/Wokwi com scheduler ativo."),
     ("Analise Exploratoria", "Heatmaps, distribuicoes por cultura, boxplots e scatter entre variaveis."),
     ("Pipeline ML", "Comparacao de modelos, metricas, residuos e feature importance."),
-    ("Previsao em Tempo Real", "Formulario de previsao de necessidade hidrica e umidade esperada."),
-    ("Recomendacoes de Manejo", "Regras agronomicas cruzando previsao ML com leituras reais dos sensores."),
+    ("Previsao Agricola", "Formulario de previsao com modelo treinado para proxy de necessidade hidrica e umidade prevista."),
+    ("Recomendacoes de Manejo", "Indicativos de manejo cruzando previsao ML com leituras registradas/simuladas do prototipo ESP32/Wokwi."),
     ("Historico de Previsoes", "Consulta ao historico de todas as previsoes realizadas."),
 ]
 for i, (titulo, descricao) in enumerate(paginas):
