@@ -139,10 +139,7 @@ def run_streamlit() -> None:
         os.execv(sys.executable, cmd)
 
     proc = subprocess.Popen(cmd, cwd=ROOT)
-    if modo_local:
-        import webbrowser
-
-        webbrowser.open(url)
+    
     try:
         proc.wait()
     except KeyboardInterrupt:
