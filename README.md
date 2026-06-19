@@ -10,15 +10,34 @@
 
 **Repositório:** [github.com/jojocamdb/FarmTech-Solutions-Fase4](https://github.com/jojocamdb/FarmTech-Solutions-Fase4/tree/main)
 
+---
 
-https://youtu.be/iBmst3sGG7I
+## 📹 Vídeos do Projeto
 
-https://youtu.be/xsXyGMQjZ_0
+Série de demonstrações em vídeo que documentam a evolução do FarmTech Solutions — da integração de Machine Learning ao dashboard analítico online.
 
-https://youtu.be/tG93NozbL6s
+| Parte | Descrição | Vídeo |
+|:-----:|-----------|-------|
+| **1** | Integração de ML com Scikit-Learn e Streamlit em dashboard estática e online para gestores agrícolas | [Assistir](https://youtu.be/iBmst3sGG7I) |
+| **2** | Implementação de algoritmos preditivos para sugerir ações futuras de irrigação e manejo agrícola | [Assistir](https://youtu.be/xsXyGMQjZ_0) |
+| **3** | **Ir além 1** — Integração dos dados reais ou simulados IoT com o banco de dados | [Assistir](https://youtu.be/tG93NozbL6s) |
+| **4** | **Ir além 2** — Dashboard analítico com previsões interativa e online | [Assistir](https://youtu.be/iBmst3sGG7I) |
 
-https://youtu.be/iBmst3sGG7I
+### Detalhamento por etapa
 
+**Parte 1 — Integração de ML com Scikit-Learn e Streamlit**  
+Apresenta a integração do pipeline de Machine Learning (Scikit-Learn) com o dashboard Streamlit, disponível em versão estática e online, voltado ao acompanhamento agrícola por gestores.
+
+**Parte 2 — Algoritmos preditivos para irrigação e manejo**  
+Demonstra a implementação de modelos preditivos que sugerem ações futuras de irrigação e manejo agrícola com base nos dados processados.
+
+**Parte 3 — Ir além 1: IoT e banco de dados**  
+Mostra a integração de dados reais ou simulados provenientes de dispositivos IoT com o banco de dados SQLite do projeto.
+
+**Parte 4 — Ir além 2: Dashboard analítico interativo**  
+Apresenta o dashboard analítico com previsões interativas em ambiente online, consolidando sensores, modelos de ML e recomendações de manejo.
+
+---
 
 ## 👨‍🎓 Integrantes
 
