@@ -10,6 +10,16 @@
 
 **Repositório:** [github.com/jojocamdb/FarmTech-Solutions-Fase4](https://github.com/jojocamdb/FarmTech-Solutions-Fase4/tree/main)
 
+**Videos de apresentação:**
+--PARTE 1 – Integração de ML com Scikit-Learn e Streamlit em dashboard estática e online para gestores agrícolas
+https://youtu.be/iBmst3sGG7I
+--PARTE 2 – Implementação de algoritmos preditivos para sugerir ações futuras de irrigação e manejo agrícola
+https://youtu.be/xsXyGMQjZ_0
+--PARTE 3 - IR ALÉM 1 – INTEGRAÇÃO DOS DADOS REAIS OU SIMULADOS IOT COM O BANCO DE DADOS
+https://youtu.be/tG93NozbL6s
+--PARTE 4 - IR ALÉM 2 – IR ALÉM 2 – DASHBOARD ANALÍTICO COM PREVISÕES INTERATIVA E ONLINE
+https://youtu.be/iBmst3sGG7I
+
 
 ## 👨‍🎓 Integrantes
 
